@@ -22,7 +22,8 @@ const NAV_ITEMS = [
   { name: "Fin-Lit AI", href: "/ai-assistant", icon: Bot, isSpecial: true },
   { name: "Subscriptions", href: "/subscriptions", icon: CalendarCheck },
   { name: "Savings Goals", href: "/savings-goals", icon: Target },
-  { name: "Onboarding Wizard", href: "/onboarding", icon: UserCheck },
+  { name: "Profile & Settings", href: "/settings", icon: UserCheck },
+  { name: "Onboarding Wizard", href: "/onboarding", icon: Sparkles },
 ];
 
 export default function Sidebar() {
