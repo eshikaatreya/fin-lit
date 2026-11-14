@@ -1,55 +1,87 @@
 # AI ARCHITECTURE: FIN-LIT
-## Deterministic Grounding & Financial Intelligence Specification
+## The 5-Layer Financial Intelligence Engine
 
-Fin-Lit adopts a hybrid AI architecture that couples deterministic mathematical computation with probabilistic natural language understanding.
+The heart of Fin-Lit is its **5-Layer Intelligence Architecture**, designed to transform raw financial transactions into continuous, personalized, and actionable guidance without ever hallucinating financial facts.
 
 ```
-┌────────────────────────────────────────────────────────┐
-│                   USER PROMPT                          │
-│   "Can I afford to purchase a jacket for ₹3,500?"      │
-└───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│              DETERMINISTIC GROUNDING ENGINE            │
-│   1. Extracts Intent: AFFORDABILITY_CHECK              │
-│   2. Retrieves Actual Verified Metrics from DB:        │
-│      - Total Remaining Budget: ₹14,200                 │
-│      - Days Remaining in Month: 16                     │
-│      - Current Safe Daily Pace: ₹887 / day             │
-│      - Post-Purchase Daily Pace: ₹668 / day            │
-│   3. Calculates Exact Mathematical Verdict:            │
-│      - Verdict: AFFORDABLE_WITH_CAUTION                │
-└───────────────────────────┬────────────────────────────┘
-                            │ Grounded Fact Context
-┌───────────────────────────▼────────────────────────────┐
-│                 REASONING ENGINE                       │
-│                                                        │
-│   Mode A (Online / Gemini Key Present):                │
-│   - Google Gemini 1.5 Flash generates empathetic,     │
-│     structured advice grounded strictly in fact facts. │
-│                                                        │
-│   Mode B (Offline / Fallback):                         │
-│   - Deterministic Rule-Based Reasoner generates        │
-│     exact breakdown without external API call.         │
-└───────────────────────────┬────────────────────────────┘
-                            │
-┌───────────────────────────▼────────────────────────────┐
-│                    FINAL RESPONSE                      │
-│   Natural language answer + Actionable Buttons         │
-└────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                        LAYER 1: FINANCIAL DATA                         │
+│            Transactions · Income · Budgets · Subscriptions             │
+│   - Unified Digital Passbook (UPI GPay, PhonePe, Paytm, BHIM, Bank)   │
+│   - Statement Importer with Idempotency Key Deduplication             │
+│   - Relational Data Isolation (Prisma ORM & SQLite / PostgreSQL)      │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ Normalized Financial Inflow/Outflow
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                  LAYER 2: FINANCIAL ANALYTICS ENGINE                   │
+│   Calculations · Categorization · Forecasting · Pattern Detection      │
+│   - Deterministic Financial Math: Income, Outflow, Discretionary Pool  │
+│   - Spending Velocity: Daily run-rate ($₹/day) & Projected Month-End  │
+│   - Indian Merchant Knowledge Base (100+ Brands Categorization)       │
+│   - Category Surplus / Deficit & Mathematical Rebalance Formulation    │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ Authoritative Metrics & Verified Facts
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                 LAYER 3: PERSONALIZED AI INTELLIGENCE                  │
+│       User Context · Behavioural Patterns · Financial Reasoning        │
+│   - Persona Contextualization (Student vs. Working Professional)       │
+│   - Micro-Spending Detection (~₹120/day on tea/snacks accumulation)    │
+│   - Weekend vs. Weekday Outing Spikes (+65% surge identification)      │
+│   - Grounded Dual-Mode AI Advisor (Gemini 1.5 Flash + Local Fallback)  │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ Synthesized Guidance & Decision Points
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                 LAYER 4: ACTIONABLE RECOMMENDATIONS                    │
+│      Budget Alerts · Savings Suggestions · Spending Adjustments        │
+│   - Predictive Budget Warnings (50%, 75%, 90%, 100% Thresholds)        │
+│   - Intelligent Budget Reallocation Proposals (Donor → Recipient)      │
+│   - Purchase Affordability Evaluations ("Can I afford ₹2,500?")        │
+│   - Explicit User Authorization Gateway (Never moves funds silently)   │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ User Decision & Preference Signals
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                  LAYER 5: USER FEEDBACK & LEARNING                     │
+│    Accepted Suggestions · Rejected Suggestions · Preference Updates     │
+│   - Logs UserFeedback records (Thumbs Up / Thumbs Down / Approvals)   │
+│   - Remembers manual category corrections for future auto-tagging      │
+│   - Adapts future recommendation thresholds based on accepted patterns │
+└────────────────────────────────────────────────────────────────────────┘
+A continuous closed feedback loop improves personalization over time.
 ```
 
 ---
 
-### Core Principles
+### Layer-by-Layer Technical Specification
 
-1. **Zero Math Delegation**:
-   An LLM should never be asked: *"What is my balance?"* or *"Calculate my velocity"*. All metrics are computed strictly in TypeScript using exact arithmetic before entering the AI context.
-2. **Strict Grounding Boundaries**:
-   The prompt provided to Gemini includes an authoritative `STRICT FINANCIAL GROUNDING` block containing the current numbers. The system prompt instructs the model to base its reasoning only on these provided numbers.
-3. **Graceful Fallback**:
-   The platform never crashes or displays broken states if an API key is missing or an external network is down. The deterministic reasoning engine handles all core queries natively.
-4. **Indian Merchant Intelligence**:
-   Merchant patterns are matched using an extensive Indian knowledge base (Swiggy, Zomato, Blinkit, Zepto, Uber, Ola, Rapido, Cult.fit, Chai Point, Chaayos, BESCOM, Indane, IRCTC, Myntra, etc.) before resorting to generic classification.
-5. **Privacy By Design**:
-   Private user credentials, UPI PINs, bank account numbers, and passwords are never collected or transmitted. Data sent to the LLM is strictly sanitized and confined to aggregate category numbers.
+#### Layer 1: Financial Data (`src/lib/passbook/`, `prisma/schema.prisma`)
+- Captures raw transaction streams from Google Pay, PhonePe, Paytm, BHIM, NetBanking, and manual cash entries.
+- **Deduplication Engine**: Uses SHA-256 idempotency hashing (`userId + date + amount + merchant + ref`) to ensure duplicate CSV uploads or webhook syncs never corrupt ledgers.
+
+#### Layer 2: Financial Analytics Engine (`src/lib/financial-engine/`)
+- Pure TypeScript, 100% deterministic calculation core.
+- Calculates:
+  - Total Monthly Inflow & Expenditure
+  - Discretionary Budget: $\text{Income} - \text{Savings Target} - \text{Fixed Obligations}$
+  - Spending Velocity: $\text{Daily Velocity} = \frac{\text{Spent}}{\text{Days Elapsed}}$
+  - Projected Month-End: $\text{Spent} + (\text{Velocity} \times \text{Days Remaining})$
+  - Category Surplus / Deficit variance
+  - 0–100 Financial Health Score
+
+#### Layer 3: Personalized AI Intelligence (`src/lib/ai/`)
+- Couples user identity (College Student allowance vs Working Professional salary) with historical spending behavior.
+- Injects strict deterministic numbers into the AI prompt to prevent mathematical hallucinations.
+- Operates in **Dual-Mode**:
+  - *Online*: Queries Gemini 1.5 Flash for natural, empathetic Indian conversational phrasing.
+  - *Offline / Fallback*: Uses local deterministic reasoning rules with 0% downtime.
+
+#### Layer 4: Actionable Recommendations (`src/app/budgets/reallocate/`, `src/lib/financial-engine/affordability.ts`)
+- Translates analytical metrics into concrete decisions:
+  - *Affordability Verdict*: Evaluates impact on remaining safe daily allowance.
+  - *Budget Reallocation*: Proposes transfer from donor category (e.g. Entertainment with surplus) to deficit category (e.g. Food & Dining) with buffer preservation.
+  - *Explicit User Authorization*: Per security principles, no budget reallocation executes without user click confirmation.
+
+#### Layer 5: User Feedback & Learning (`src/app/api/recommendations/feedback/`)
+- Every recommendation presents user choices (*Approve*, *Decline*, *Feedback*).
+- Accepted and rejected actions are recorded in the `UserFeedback` table.
+- Future suggestion thresholds adapt dynamically based on user engagement history.
+

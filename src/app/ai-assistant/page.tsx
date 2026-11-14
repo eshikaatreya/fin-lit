@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { formatINR } from "@/lib/constants";
 import ReallocationModal from "@/components/common/ReallocationModal";
+import IntelligencePipelineCard from "@/components/common/IntelligencePipelineCard";
 
 const SUGGESTED_QUERIES = [
   "Can I afford to purchase something worth ₹2,500?",
@@ -348,6 +349,9 @@ You can ask me questions about your spending, test if you can afford upcoming pu
           </div>
         </div>
       </div>
+
+      {/* Fin-Lit Intelligence Architecture Pipeline */}
+      <IntelligencePipelineCard />
 
       {/* Reallocation Modal */}
       {activeReallocation && (
