@@ -148,13 +148,21 @@ export default function BudgetsPage() {
           >
             + Add Custom Category
           </button>
-          {reallocation && (
+          {reallocation ? (
             <button
               onClick={() => setIsReallocModalOpen(true)}
               className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/30 flex items-center space-x-2 transition-transform hover:scale-[1.02]"
             >
               <Sparkles className="w-4 h-4" />
               <span>AI Reallocation Proposal</span>
+            </button>
+          ) : (
+            <button
+              onClick={fetchReallocationSuggestion}
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100 flex items-center space-x-1.5 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Scan for AI Rebalance</span>
             </button>
           )}
         </div>

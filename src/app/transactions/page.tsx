@@ -319,6 +319,23 @@ export default function TransactionsPage() {
               Paste your exported statement CSV. Column headers (Date, Description, Debit/Credit) are auto-detected and duplicates are automatically prevented.
             </p>
 
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                CSV Statement Data
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setCsvInput(
+                    `Date,Narration,Debit,Credit,RefNo\n2026-11-04,UPI/SWIGGY/412891,450.00,,UPI123456\n2026-11-05,UPI/BLINKIT/987654,620.00,,UPI987654\n2026-11-06,UPI/CHAI-POINT/33421,140.00,,UPI334211\n2026-11-07,UPI/UBER-INDIA/88219,380.00,,UPI882190\n2026-11-08,SALARY CREDIT,,85000.00,SAL202611\n2026-11-09,UPI/ZEPTO/554129,590.00,,UPI554129`
+                  );
+                }}
+                className="text-[11px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold"
+              >
+                + Load Sample Indian UPI Statement
+              </button>
+            </div>
+
             <textarea
               rows={8}
               placeholder={`Date,Narration,Debit,Credit,RefNo\n2026-11-04,UPI/SWIGGY/123,450.00,,UPI123456\n2026-11-05,UPI/BLINKIT/987,620.00,,UPI987654`}
