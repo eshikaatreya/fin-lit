@@ -1,0 +1,314 @@
+// Fin-Lit Database Schema - Production Grade Financial Management Platform
+// Supports SQLite for zero-config local run and easily switches to PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  passwordHash        String?
+  fullName            String
+  age                 Int?
+  mobileNumber        String?
+  currency            String               @default("INR")
+  financialExperience String?              // "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  userProfile         UserProfile?
+  financialProfile    FinancialProfile?
+  incomeSources       IncomeSource[]
+  categories          TransactionCategory[]
+  budgets             Budget[]
+  transactions        Transaction[]
+  savingsGoals        SavingsGoal[]
+  subscriptions       Subscription[]
+  paymentSources      PaymentSource[]
+  notifications       Notification[]
+  aiInsights          AIInsight[]
+  aiRecommendations   AIRecommendation[]
+  userFeedback        UserFeedback[]
+  recurringExpenses   RecurringTransaction[]
+  importedStatements  ImportedStatement[]
+  auditLogs           AuditLog[]
+}
+
+model UserProfile {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  occupationType       String   // "STUDENT" | "WORKING_PROFESSIONAL"
+  monthlyIncome        Float    // Base monthly allowance or take-home salary in INR
+  additionalIncome     Float    @default(0)
+  salaryFrequency      String   @default("MONTHLY") // "WEEKLY" | "BIWEEKLY" | "MONTHLY"
+  detailsJson          String   @default("{}") // Rich student/professional specific metadata
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model FinancialProfile {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  monthlySavingsTarget Float    // Amount in INR
+  savingsTargetType    String   @default("PERCENTAGE") // "FIXED" | "PERCENTAGE" | "FLEXIBLE"
+  savingsPercentage    Float?   @default(20)
+  financialHealthScore Int      @default(75) // 0-100 score computed deterministically
+  riskTolerance        String   @default("MODERATE") // "CONSERVATIVE" | "MODERATE" | "AGGRESSIVE"
+  aiConsentGiven       Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model IncomeSource {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String   // "Primary Salary", "Freelancing", "Parents Allowance", "Scholarship"
+  amount      Float
+  frequency   String   @default("MONTHLY")
+  isPrimary   Boolean  @default(true)
+  details     String?
+  createdAt   DateTime @default(now())
+}
+
+model TransactionCategory {
+  id               String               @id @default(uuid())
+  userId           String?              // null for system default categories
+  user             User?                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String               // e.g. "Food & Dining", "Groceries", "Transportation"
+  icon             String               // Lucide icon identifier
+  color            String               // Hex or tailwind color class
+  type             String               @default("EXPENSE") // "EXPENSE" | "INCOME"
+  isSystemDefault  Boolean              @default(false)
+  parentCategoryId String?
+  parentCategory   TransactionCategory? @relation("SubCategories", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  subCategories    TransactionCategory[] @relation("SubCategories")
+  allocations      BudgetAllocation[]
+  transactions     Transaction[]
+  subscriptions    Subscription[]
+
+  createdAt        DateTime             @default(now())
+}
+
+model Budget {
+  id              String             @id @default(uuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  month           String             // "YYYY-MM" e.g. "2026-11"
+  totalIncome     Float
+  totalAllocated  Float
+  totalSpent      Float              @default(0)
+  savingsTarget   Float              @default(0)
+  status          String             @default("ACTIVE") // "ACTIVE" | "ARCHIVED"
+  allocations     BudgetAllocation[]
+  transfers       BudgetTransfer[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@unique([userId, month])
+}
+
+model BudgetAllocation {
+  id              String              @id @default(uuid())
+  budgetId        String
+  budget          Budget              @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  categoryId      String
+  category        TransactionCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  allocatedAmount Float
+  spentAmount     Float               @default(0)
+  alertThreshold  Float               @default(80) // Alert at 80%
+  notes           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  fromTransfers   BudgetTransfer[]    @relation("TransferFrom")
+  toTransfers     BudgetTransfer[]    @relation("TransferTo")
+
+  @@unique([budgetId, categoryId])
+}
+
+model BudgetTransfer {
+  id              String            @id @default(uuid())
+  budgetId        String
+  budget          Budget            @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  fromAllocId     String
+  fromAllocation  BudgetAllocation  @relation("TransferFrom", fields: [fromAllocId], references: [id], onDelete: Cascade)
+  toAllocId       String
+  toAllocation    BudgetAllocation  @relation("TransferTo", fields: [toAllocId], references: [id], onDelete: Cascade)
+  amount          Float
+  reason          String
+  suggestedByAI   Boolean           @default(false)
+  userApproved    Boolean           @default(true)
+  transferredAt   DateTime          @default(now())
+}
+
+model SavingsGoal {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String   // e.g. "Emergency Fund", "MacBook Pro", "Goa Trip"
+  targetAmount  Float
+  currentAmount Float    @default(0)
+  deadline      DateTime?
+  category      String   // "EMERGENCY" | "GADGETS" | "TRAVEL" | "EDUCATION" | "INVESTMENTS" | "OTHER"
+  icon          String   @default("Target")
+  color         String   @default("#10B981")
+  status        String   @default("IN_PROGRESS") // "IN_PROGRESS" | "COMPLETED" | "PAUSED"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Subscription {
+  id              String               @id @default(uuid())
+  userId          String
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String               // "Netflix", "Spotify", "Amazon Prime"
+  amount          Float
+  billingCycle    String               @default("MONTHLY") // "MONTHLY" | "ANNUAL" | "QUARTERLY"
+  nextBillingDate DateTime
+  paymentMethod   String               @default("UPI")
+  categoryId      String?
+  category        TransactionCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  status          String               @default("ACTIVE") // "ACTIVE" | "PAUSED" | "CANCELLED"
+  lastPriceChange Float?               // Tracks previous price for detection
+  notes           String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+}
+
+model PaymentSource {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String        // "Google Pay (HDFC)", "Paytm UPI", "Cash in Wallet"
+  type         String        // "UPI" | "CREDIT_CARD" | "DEBIT_CARD" | "NET_BANKING" | "CASH"
+  provider     String        // "GPAY" | "PHONEPE" | "PAYTM" | "BHIM" | "HDFC" | "SBI" | "ICICI" | "CASH" | "OTHER"
+  lastFour     String?
+  isDefault    Boolean       @default(false)
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+}
+
+model Transaction {
+  id                    String               @id @default(uuid())
+  userId                String
+  user                  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount                Float                // In INR
+  type                  String               // "EXPENSE" | "INCOME" | "TRANSFER"
+  date                  DateTime
+  merchant              String               // "Swiggy", "Zepto", "Uber", "Cult.fit"
+  description           String?
+  categoryId            String
+  category              TransactionCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  paymentMethod         String               @default("UPI") // "UPI" | "CASH" | "DEBIT_CARD" | "CREDIT_CARD" | "BANK_TRANSFER"
+  paymentSourceId       String?
+  paymentSource         PaymentSource?       @relation(fields: [paymentSourceId], references: [id], onDelete: SetNull)
+  referenceId           String?              // UPI transaction ref ID (e.g. "UPI/412891901234/CR")
+  idempotencyKey        String?              @unique
+  receiptUrl            String?
+  isRecurring           Boolean              @default(false)
+  status                String               @default("COMPLETED") // "COMPLETED" | "PENDING" | "REVERSED"
+  aiSuggestedCategory   String?
+  userConfirmedCategory Boolean              @default(true)
+  notes                 String?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  @@index([userId, date])
+  @@index([userId, categoryId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // "BUDGET_ALERT" | "PREDICTIVE_ALERT" | "DAILY_SUMMARY" | "SUBSCRIPTION_RENEWAL" | "SAVINGS_ACHIEVEMENT"
+  priority  String   @default("MEDIUM") // "LOW" | "MEDIUM" | "HIGH"
+  isRead    Boolean  @default(false)
+  actionUrl String?
+  createdAt DateTime @default(now())
+}
+
+model AIInsight {
+  id                  String   @id @default(uuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title               String
+  summary             String
+  detailedExplanation String
+  category            String   // "SPENDING" | "BUDGET" | "SAVINGS" | "SUBSCRIPTIONS" | "PATTERN"
+  impactLevel         String   @default("INFO") // "INFO" | "OPPORTUNITY" | "WARNING" | "CRITICAL"
+  metricSnapshot      String?  // JSON snapshot of numbers at insight time
+  isDismissed         Boolean  @default(false)
+  createdAt           DateTime @default(now())
+}
+
+model AIRecommendation {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String   // "BUDGET_REALLOCATION" | "SPENDING_CUT" | "SUBSCRIPTION_OPTIMIZATION" | "SAVINGS_BOOST"
+  title         String
+  description   String
+  actionPayload String   // JSON details (e.g. fromCategory, toCategory, amount)
+  status        String   @default("PENDING") // "PENDING" | "ACCEPTED" | "REJECTED" | "EXPIRED"
+  userFeedback  String?
+  createdAt     DateTime @default(now())
+}
+
+model UserFeedback {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendationId String?
+  rating           String   // "THUMBS_UP" | "THUMBS_DOWN"
+  comment          String?
+  createdAt        DateTime @default(now())
+}
+
+model RecurringTransaction {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String   // "House Rent", "Wi-Fi Fiber", "Gym"
+  expectedAmount Float
+  recurrence     String   @default("MONTHLY") // "WEEKLY" | "MONTHLY" | "ANNUAL"
+  categoryId     String?
+  lastSeenDate   DateTime?
+  nextDueDate    DateTime
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+}
+
+model ImportedStatement {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filename       String
+  sourceFormat   String   // "CSV" | "PDF_EXTRACT" | "UPI_EXPORT"
+  importedCount  Int      @default(0)
+  duplicateCount Int      @default(0)
+  importedAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String   // "CREATE_TRANSACTION", "APPROVE_REALLOCATION", "EXPORT_DATA"
+  entityType String
+  entityId   String?
+  details    String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}
